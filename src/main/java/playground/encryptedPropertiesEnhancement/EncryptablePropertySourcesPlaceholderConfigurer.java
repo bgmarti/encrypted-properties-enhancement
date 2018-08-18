@@ -10,23 +10,20 @@ import org.springframework.core.env.Environment;
 
 public class EncryptablePropertySourcesPlaceholderConfigurer extends PropertySourcesPlaceholderConfigurer {
 
-    private Environment environment;
-     
-    private final StringEncryptor stringEncryptor;
-    
-    public EncryptablePropertySourcesPlaceholderConfigurer(StringEncryptor stringEncryptor) {
-    	this.stringEncryptor = stringEncryptor;
-    }
+	private final ConfigurableEnvironment environment;
 
-    @Override
-    public void setEnvironment(Environment environment) {
-        this.environment = environment;
-    }
+	private final StringEncryptor stringEncryptor;
 
-    @Override
-    protected void processProperties(ConfigurableListableBeanFactory beanFactoryToProcess,
-                                     ConfigurablePropertyResolver propertyResolver) throws BeansException {
-        super.processProperties(beanFactoryToProcess,
-                new EncryptablePropertySourcesPropertyResolver(((ConfigurableEnvironment) environment).getPropertySources(), stringEncryptor));
-    }
+	public EncryptablePropertySourcesPlaceholderConfigurer(ConfigurableEnvironment environment,
+			StringEncryptor stringEncryptor) {
+		this.environment = environment;
+		this.stringEncryptor = stringEncryptor;
+	}
+
+	@Override
+	protected void processProperties(ConfigurableListableBeanFactory beanFactoryToProcess,
+			ConfigurablePropertyResolver propertyResolver) throws BeansException {
+		super.processProperties(beanFactoryToProcess,
+				new EncryptablePropertySourcesPropertyResolver(environment.getPropertySources(), stringEncryptor));
+	}
 }
