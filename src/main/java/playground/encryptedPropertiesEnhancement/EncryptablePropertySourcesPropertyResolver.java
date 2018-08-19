@@ -1,36 +1,35 @@
 package playground.encryptedPropertiesEnhancement;
 
-import org.jasypt.encryption.StringEncryptor;
-import org.jasypt.properties.PropertyValueEncryptionUtils;
 import org.springframework.core.env.PropertySources;
 import org.springframework.core.env.PropertySourcesPropertyResolver;
 
-public class EncryptablePropertySourcesPropertyResolver extends PropertySourcesPropertyResolver {
+public class EncryptablePropertySourcesPropertyResolver extends PropertySourcesPropertyResolver
+		implements ResolvingEncryptedProperties {
 
-	private final StringEncryptor stringEncryptor;
+	private final DecryptingPropertyValue decryptingPropertyValue;
 
-    public EncryptablePropertySourcesPropertyResolver(PropertySources propertySources, StringEncryptor stringEncryptor) {
-        super(propertySources);
-        this.stringEncryptor = stringEncryptor;
-    }
+	public EncryptablePropertySourcesPropertyResolver(PropertySources propertySources,
+			DecryptingPropertyValue decryptingPropertyValue) {
+		super(propertySources);
+		this.decryptingPropertyValue = decryptingPropertyValue;
+	}
 
-    @Override
-    public String resolvePlaceholders(String text) {
-        String resolvedText = super.resolvePlaceholders(text);
-        return tryDecrypt(resolvedText);
-    }
+	@Override
+	public String resolvePlaceholders(String text) {
+		String resolvedText = super.resolvePlaceholders(text);
+		return decryptIfRequired(resolvedText);
+	}
 
-    @Override
-    public String resolveRequiredPlaceholders(String text) {
-        String resolvedText = super.resolveRequiredPlaceholders(text);
-        return tryDecrypt(resolvedText);
-    }
-    
-    private String tryDecrypt(String originalValue) {
-		if (!PropertyValueEncryptionUtils.isEncryptedValue(originalValue)) {
+	@Override
+	public String resolveRequiredPlaceholders(String text) {
+		String resolvedText = super.resolveRequiredPlaceholders(text);
+		return decryptIfRequired(resolvedText);
+	}
+
+	private String decryptIfRequired(String originalValue) {
+		if (!decryptingPropertyValue.shouldBeDecrypted(originalValue)) {
 			return originalValue;
 		}
-		return PropertyValueEncryptionUtils.decrypt(originalValue,
-					this.stringEncryptor);
+		return decryptingPropertyValue.decrypt(originalValue);
 	}
 }
